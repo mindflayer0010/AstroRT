@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astro-rt"
+version = "0.1.0"
+description = "AstroRT Phase 1: a Python research prototype for real-time orbital dynamics."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+viz = [
+    "pygame>=2.5",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,754 @@
+:root {
+  /* Keep the visualizer readable as a dark, instrument-like app surface. */
+  color-scheme: dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #05070d;
+  color: #eef3ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(42, 86, 125, 0.22), transparent 26rem),
+    linear-gradient(135deg, #05070d 0%, #0c111b 48%, #11151c 100%);
+}
+
+body.dragging-hud {
+  user-select: none;
+}
+
+.about-page {
+  overflow: auto;
+}
+
+button,
+select,
+input {
+  /* Use the same font as the rest of the UI so controls feel integrated. */
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+select,
+input[type="text"],
+input[type="color"] {
+  min-height: 36px;
+  border: 1px solid rgba(238, 243, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(9, 13, 22, 0.84);
+  color: #eef3ff;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+input[type="number"] {
+  min-height: 34px;
+  width: 100%;
+  border: 1px solid rgba(238, 243, 255, 0.2);
+  border-radius: 6px;
+  padding: 0 8px;
+  background: rgba(9, 13, 22, 0.84);
+  color: #eef3ff;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 0 8px;
+}
+
+input[type="color"] {
+  width: 100%;
+  padding: 4px;
+}
+
+button {
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+button:hover,
+select:hover {
+  border-color: rgba(102, 190, 255, 0.72);
+}
+
+select {
+  padding: 0 10px;
+}
+
+label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #b9c5d6;
+}
+
+#space {
+  /* The canvas is the actual simulator surface. It fills the first viewport. */
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+#space.adding {
+  cursor: crosshair;
+}
+
+#space.measuring {
+  cursor: cell;
+}
+
+.hover-card {
+  position: fixed;
+  z-index: 7;
+  min-width: 190px;
+  max-width: 260px;
+  padding: 8px;
+  border: 1px solid rgba(238, 243, 255, 0.18);
+  border-radius: 7px;
+  background: rgba(5, 7, 13, 0.86);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.32);
+  color: #dce8f8;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.hover-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #eef3ff;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.hover-card span {
+  display: block;
+  color: #aebbd0;
+}
+
+.hud {
+  /* Movable/resizable dock. It sits on top of the canvas but can be collapsed,
+     hidden, dragged, or resized when the user wants a clearer view. */
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  gap: 8px;
+  width: min(430px, calc(100vw - 20px));
+  min-width: 300px;
+  max-width: calc(100vw - 20px);
+  max-height: calc(100vh - 20px);
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid rgba(238, 243, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(5, 7, 13, 0.74);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+  resize: both;
+  z-index: 5;
+}
+
+.hud.hidden {
+  display: none;
+}
+
+.hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 30px;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.hud-header strong {
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.hud-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.hud-actions button,
+.show-hud {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.about-shell {
+  width: min(1080px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 12vh 0 64px;
+}
+
+.about-hero {
+  display: grid;
+  gap: 16px;
+  min-height: 58vh;
+  align-content: center;
+}
+
+.about-hero p {
+  margin: 0;
+  color: #8fbce6;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.about-hero h1 {
+  margin: 0;
+  font-size: clamp(48px, 10vw, 120px);
+  line-height: 0.9;
+  letter-spacing: 0;
+}
+
+.about-hero span {
+  max-width: 720px;
+  color: #c7d4e5;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.about-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(238, 243, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(9, 13, 22, 0.84);
+  text-decoration: none;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.about-grid article {
+  border-top: 1px solid rgba(238, 243, 255, 0.16);
+  padding-top: 16px;
+}
+
+.about-grid h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.about-grid p {
+  margin: 0;
+  color: #b9c5d6;
+  line-height: 1.5;
+}
+
+.show-hud {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+
+.tab {
+  min-height: 30px;
+  padding: 0 6px;
+  border-color: rgba(238, 243, 255, 0.14);
+  color: #aebbd0;
+  font-size: 12px;
+}
+
+.tab.active {
+  border-color: rgba(102, 190, 255, 0.72);
+  background: rgba(44, 120, 180, 0.26);
+  color: #eef3ff;
+}
+
+.panel {
+  border: 1px solid rgba(238, 243, 255, 0.12);
+  border-radius: 7px;
+  background: rgba(9, 13, 22, 0.66);
+}
+
+.panel summary {
+  min-height: 30px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: #eef3ff;
+  font-size: 13px;
+  font-weight: 700;
+  user-select: none;
+}
+
+.toolbar,
+.metrics,
+.body-panel,
+.editor-panel,
+.view-data-panel,
+.measurement-panel,
+.help-panel {
+  /* Compact tool surfaces inside collapsible panels. */
+  width: 100%;
+  padding: 8px;
+}
+
+.view-data-panel,
+.measurement-panel,
+.help-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.help-panel article {
+  display: grid;
+  gap: 3px;
+  padding: 7px;
+  border: 1px solid rgba(238, 243, 255, 0.1);
+  border-radius: 6px;
+  background: rgba(5, 7, 13, 0.34);
+}
+
+.help-panel h2 {
+  margin: 0;
+  color: #eef3ff;
+  font-size: 13px;
+}
+
+.help-panel p {
+  margin: 0;
+  color: #aebbd0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.timeline-panel {
+  display: grid;
+  gap: 8px;
+}
+
+#timeline {
+  width: 100%;
+}
+
+.preset-grid {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+}
+
+.preset-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  align-items: center;
+  min-height: 0;
+  padding: 8px;
+  text-align: left;
+}
+
+.preset-card strong,
+.preset-card span {
+  min-width: 0;
+}
+
+.preset-card span {
+  color: #9fadc4;
+  font-size: 12px;
+}
+
+.stability-badge,
+.health-badge {
+  border: 1px solid rgba(238, 243, 255, 0.16);
+  border-radius: 999px;
+  padding: 2px 7px;
+  color: #dce8f8;
+  font-size: 11px;
+}
+
+.health-badge.good {
+  border-color: rgba(105, 220, 150, 0.36);
+  color: #9df0bb;
+}
+
+.health-badge.warn {
+  border-color: rgba(255, 205, 100, 0.36);
+  color: #ffd98a;
+}
+
+.health-badge.bad {
+  border-color: rgba(255, 120, 120, 0.44);
+  color: #ffb3b3;
+}
+
+.tool-actions {
+  flex-wrap: wrap;
+}
+
+.tool-actions button {
+  flex: 1;
+  min-width: 110px;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: end;
+  gap: 8px;
+}
+
+.button-row {
+  display: flex;
+  gap: 6px;
+  grid-column: 1 / -1;
+}
+
+.control {
+  display: grid;
+  gap: 4px;
+  min-width: 96px;
+  font-size: 12px;
+}
+
+.control.wide {
+  min-width: 150px;
+}
+
+.control-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.check-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.check-control {
+  display: inline-flex;
+  align-self: center;
+  min-height: 36px;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.metrics {
+  /* Monospace makes changing numeric diagnostics easier to scan. */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #cdd6e5;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 14px;
+}
+
+.metrics span {
+  white-space: nowrap;
+}
+
+.warnings {
+  flex-basis: 100%;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid rgba(255, 205, 100, 0.28);
+  border-radius: 6px;
+  background: rgba(80, 52, 8, 0.28);
+  color: #ffd98a;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.measurement-hint {
+  color: #9fadc4;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.measurement-list {
+  display: grid;
+  gap: 5px;
+  max-height: 150px;
+  overflow: auto;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+}
+
+.measurement-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 6px;
+  border: 1px solid rgba(238, 243, 255, 0.1);
+  border-radius: 5px;
+  background: rgba(5, 7, 13, 0.42);
+}
+
+.measurement-row button {
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.orbit-calculator {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid rgba(120, 230, 180, 0.16);
+  border-radius: 6px;
+  background: rgba(9, 36, 30, 0.22);
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+.orbit-calculator div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.orbit-calculator span {
+  color: #8fa0b8;
+  font-size: 11px;
+}
+
+.orbit-calculator strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #dce8f8;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.body-panel {
+  color: #cdd6e5;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+  max-height: min(34vh, 260px);
+  overflow: auto;
+}
+
+.body-panel header,
+.body-row {
+  display: grid;
+  grid-template-columns: minmax(88px, 1.15fr) repeat(5, minmax(58px, 0.8fr));
+  gap: 6px;
+  align-items: center;
+}
+
+.body-panel header {
+  position: sticky;
+  top: 0;
+  padding-bottom: 6px;
+  background: rgba(5, 7, 13, 0.92);
+  color: #eef3ff;
+  z-index: 1;
+}
+
+.body-panel header span {
+  color: #8fa0b8;
+}
+
+.body-readout {
+  display: grid;
+  gap: 4px;
+}
+
+.body-row {
+  min-height: 26px;
+  border-top: 1px solid rgba(238, 243, 255, 0.08);
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+.body-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.body-row:hover,
+.body-row.selected {
+  background: rgba(102, 190, 255, 0.12);
+}
+
+.body-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.body-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.editor-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.selected-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #eef3ff;
+  font-size: 13px;
+}
+
+#selectedBodyHint {
+  color: #8fa0b8;
+  font-size: 12px;
+}
+
+.editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.preset-row button {
+  min-height: 30px;
+  padding: 0 6px;
+  font-size: 12px;
+}
+
+.editor-control {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  color: #b9c5d6;
+  font-size: 12px;
+}
+
+.editor-actions {
+  flex-wrap: wrap;
+}
+
+.editor-actions button {
+  flex: 1;
+  min-width: 96px;
+}
+
+#removeBody {
+  border-color: rgba(255, 120, 120, 0.38);
+  color: #ffd1d1;
+}
+
+#speed,
+#zoom {
+  width: 120px;
+}
+
+#newMass,
+#orbitEccentricity {
+  width: 120px;
+}
+
+#speedValue,
+#massValue,
+#eccValue,
+#zoomValue {
+  min-width: 0;
+  color: #d8e2f0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  #speed,
+  #newMass,
+  #orbitEccentricity,
+  #zoom {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .hud {
+    left: 10px;
+    right: 10px;
+    width: auto;
+    min-width: 0;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .control-group {
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    flex: 1;
+    padding: 0 8px;
+  }
+
+  .body-panel header,
+  .body-row {
+    grid-template-columns: minmax(82px, 1fr) repeat(5, 62px);
+  }
+
+  .editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .preset-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
